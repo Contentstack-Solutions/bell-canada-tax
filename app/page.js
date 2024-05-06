@@ -20,29 +20,31 @@ export default function Home({ params }) {
       ["hero_banner", "page_content.image_gallery.gallery_item.page"]
     );
     // console.log("homepage:", entry);
+
+    const banners = await Stack.getAllEntriesByType("hero_banner");
+    // console.log("homepage:", entry);
+    setBanners(banners);
+
     setEntry(entry);
     SetLoading(false);
   };
 
-  const getBanners = async () => {
-    const banners = await Stack.getAllEntriesByType("hero_banner");
-    // console.log("homepage:", entry);
-    setBanners(banners);
-    SetLoading(false);
-  };
+  // const getBanners = async () => {
+
+  // };
 
   useEffect(() => {
+
     onEntryChange(getContent);
-    onEntryChange(getBanners);
   }, []);
+
+
 
   if (loading) {
     return;
   }
 
   console.log(banners);
-
-
 
   function ProvinceSelector() {
     const notificationMethods = [
@@ -82,13 +84,13 @@ export default function Home({ params }) {
 
   function BannerWrapper() {
     if (province === "") {
-      return <Hero content={entry.hero_banner[0]} />;
-    } else {
-      const result = banners[0].filter(
-        banner => !!banner.taxonomies
-      ).filter((banner) => banner.taxonomies[0].term_uid == province);
-
-      console.log(result)
+      const result = banners[0].filter(banner => !banner.taxonomies);
+      return  <Hero content={result[0]} />
+    }
+    
+    else {
+      const result = banners[0].filter(banner => !!banner.taxonomies)
+      .filter((banner) => banner.taxonomies[0].term_uid == province);
       return <Hero content={result[0]} />
     }
   }
@@ -98,7 +100,7 @@ export default function Home({ params }) {
       <NavBar />
 
       <ProvinceSelector />
-
+      
       <BannerWrapper />
 
       {entry.page_content?.map((item, index) => {
