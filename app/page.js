@@ -9,8 +9,13 @@ import ImageGallery from "./components/ImageGallery";
 
 export default function Home({ params }) {
   const [entry, setEntry] = useState({});
+
+  // Array of all banners, coming from the line 29 call
   const [banners, setBanners] = useState([]);
-  const [province, setProvince] = useState("");
+
+  // State object that holds the current selected province
+  const [province, setProvince] = useState("default");
+
   const [loading, SetLoading] = useState(true);
 
   const getContent = async () => {
@@ -19,36 +24,26 @@ export default function Home({ params }) {
       "home_page",
       ["hero_banner", "page_content.image_gallery.gallery_item.page"]
     );
-    // console.log("homepage:", entry);
 
+    // API call to Contentstack calling all hero_banner entries
     const banners = await Stack.getAllEntriesByType("hero_banner");
-    // console.log("homepage:", entry);
     setBanners(banners);
 
     setEntry(entry);
     SetLoading(false);
   };
 
-  // const getBanners = async () => {
-
-  // };
-
   useEffect(() => {
-
     onEntryChange(getContent);
   }, []);
-
-
 
   if (loading) {
     return;
   }
 
-  console.log(banners);
-
   function ProvinceSelector() {
-    const notificationMethods = [
-      { id: "", title: "Default" },
+    const provinces = [
+      { id: "default", title: "Default" },
       { id: "ontario", title: "Ontario" },
       { id: "quebec", title: "Quebec" },
     ];
@@ -58,21 +53,25 @@ export default function Home({ params }) {
         <fieldset className="m-4">
           <legend className="sr-only">Notification method</legend>
           <div className="space-y-4 sm:flex sm:items-center sm:space-x-10 sm:space-y-0">
-            {notificationMethods.map((notificationMethod) => (
-              <div key={notificationMethod.id} className="flex items-center">
+
+            {/* Mapping over hard-coded province options */}
+            {provinces.map((provinceItem) => (
+              <div key={provinceItem.id} className="flex items-center">
                 <input
-                  id={notificationMethod.id}
+                  id={provinceItem.id}
                   name="notification-method"
                   type="radio"
-                  defaultChecked={notificationMethod.id == province}
+                  defaultChecked={provinceItem.id == province}
                   className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                  onClick={(e) => {setProvince(notificationMethod.id)}}
+
+                  // Setting the province state, which will be used to filter through all hero_banner entries
+                  onClick={(e) => {setProvince(provinceItem.id)}}
                 />
                 <label
-                  htmlFor={notificationMethod.id}
+                  htmlFor={provinceItem.id}
                   className="ml-3 block text-sm font-medium leading-6 text-gray-900"
                 >
-                  {notificationMethod.title}
+                  {provinceItem.title}
                 </label>
               </div>
             ))}
@@ -83,11 +82,14 @@ export default function Home({ params }) {
   }
 
   function BannerWrapper() {
-    if (province === "") {
+
+    // If there is no province selected, use the default hero banner which has no taxonomy
+    if (province === "default") {
       const result = banners[0].filter(banner => !banner.taxonomies);
       return  <Hero content={result[0]} />
     }
     
+    // If there is a province selected, map through the hero banners and find the one that matches the taxonomy selected
     else {
       const result = banners[0].filter(banner => !!banner.taxonomies)
       .filter((banner) => banner.taxonomies[0].term_uid == province);
@@ -100,7 +102,7 @@ export default function Home({ params }) {
       <NavBar />
 
       <ProvinceSelector />
-      
+
       <BannerWrapper />
 
       {entry.page_content?.map((item, index) => {
